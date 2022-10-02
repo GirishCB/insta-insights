@@ -80,3 +80,87 @@ nodeSelector: {}
 tolerations: []
 
 affinity: {}
+
+prometheus:
+  serverFiles:
+    prometheus.yml:
+      scrape_configs:
+        - job_name: postgres-exporter
+          scrape_interval: 20m
+          scrape_timeout: 15m
+          honor_timestamps: false
+          static_configs:
+            - targets: 
+              - insta-insights-prometheus-postgres-exporter:80
+
+prometheus-postgres-exporter:
+  config:
+    datasource:
+      # Specify one of both datasource or datasourceSecret
+      host: host.minikube.internal
+      user: postgres
+      # Only one of password, passwordFile, passwordSecret and pgpassfile can be specified
+      password:
+      # Specify passwordFile if DB password is stored in a file.
+      # For example, to use with vault-injector from Hashicorp
+      passwordFile: ''
+      # Specify passwordSecret if DB password is stored in secret.
+      passwordSecret: {}
+      # Secret name
+      #  name:
+      # Password key inside secret
+      #  key:
+      pgpassfile: ''
+      # If pgpassfile is set, it is used to initialize the PGPASSFILE environment variable.
+      # See https://www.postgresql.org/docs/14/libpq-pgpass.html for more info.
+      port: "5432"
+      database: ''
+      sslmode: disable
+      extraParams: ''
+
+    externalQueries:
+      enabled: false
+      configmap: postgresql-common-exporter-queries
+    # These are the default queries that the exporter will run, extracted from: https://github.com/prometheus-community/postgres_exporter/blob/master/queries.yaml
+    queries: |-
+      pg_bill_charges_per_bill:
+        query: "select bill_no, count(*) as count from cen.bill_charge group by bill_no order by 2 desc limit 10"
+        master: true
+        metrics:
+          - bill_no:
+              usage: "LABEL"
+              description: "Bill Number"
+          - count:
+              usage: "GAUGE"
+              description: "Number of bill charges"
+
+      pg_total_users:
+        query: "select count(*) as count from cen.u_user"
+        master: true
+        metrics:
+          - count:
+              usage: "GAUGE"
+              descripton: "Number of users"
+
+      pg_database_size:
+        query: "SELECT pg_database.datname, pg_database_size(pg_database.datname) as bytes FROM pg_database"
+        master: true
+        cache_seconds: 30
+        metrics:
+          - datname:
+              usage: "LABEL"
+              description: "Name of the database"
+          - bytes:
+              usage: "GAUGE"
+              description: "Disk space used by the database"
+
+grafana:
+  datasources: {}
+    datasources.yaml:
+      apiVersion: 1
+      datasources:
+      - name: Prometheus
+        type: prometheus
+        url: 
+        access: proxy
+        isDefault: true

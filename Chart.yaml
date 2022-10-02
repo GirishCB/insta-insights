@@ -2,6 +2,11 @@ apiVersion: v2
 name: insta-insights
 description: A Helm chart for Kubernetes
 
+
+sources: 
+  - https://github.com/prometheus/prometheus 
+  - 
+
 # A chart can be either an 'application' or a 'library' chart.
 #
 # Application charts are a collection of templates that can be packaged into versioned archives
@@ -22,3 +27,18 @@ version: 0.1.0
 # follow Semantic Versioning. They should reflect the version the application is using.
 # It is recommended to use it with quotes.
 appVersion: "1.16.0"
+
+dependencies:
+  - name: prometheus
+    version: "15.12.*"
+    repository: https://prometheus-community.github.io/helm-charts
+
+  - name: grafana
+    version: "6.38.*"
+    repository: https://grafana.github.io/helm-charts
+
+  - name: prometheus-postgres-exporter
+    version: "3.1.*"
+    repository: https://prometheus-community.github.io/helm-charts
+
+  
